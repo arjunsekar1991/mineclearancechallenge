@@ -1,6 +1,7 @@
 from midca import plans, base
 
 import json
+import numpy as np
 
 class WaypointPlanner(base.BaseModule):
 
@@ -70,7 +71,7 @@ class WaypointPlanner(base.BaseModule):
 
         return way_points
 
-    def define_circle(p1, p2, p3):
+    def define_circle(self, p1, p2, p3):
         """
         Returns the center and radius of the circle passing the given 3 points.
         In case the 3 points form a line, returns (None, infinity).
@@ -81,14 +82,13 @@ class WaypointPlanner(base.BaseModule):
         det = (p1[0] - p2[0]) * (p2[1] - p3[1]) - (p2[0] - p3[0]) * (p1[1] - p2[1])
 
         if abs(det) < 1.0e-6:
-            return (None, np.inf)
-
+            return None, np.inf
         # Center of circle
         cx = (bc * (p2[1] - p3[1]) - cd * (p1[1] - p2[1])) / det
         cy = ((p1[0] - p2[0]) * cd - (p2[0] - p3[0]) * bc) / det
 
         radius = np.sqrt((cx - p1[0]) ** 2 + (cy - p1[1]) ** 2)
-        return ((cx, cy), radius)
+        return (cx, cy), radius
 
     def set_way_points(self,way_points):
         """
@@ -140,30 +140,48 @@ class WaypointPlanner(base.BaseModule):
            # print zipped
             print self.mayBeCircle
             if len(self.mayBeCircle)>3:
-                p1 = []
-                p2 = []
-                p3 = []
+                p1 = [0,0]
+                p2 = [0,0]
+                p3 = [0,0]
+                p4 = [0,0]
+                p5 = [0,0]
+                p6 = [0,0]
                 x = list(self.mayBeCircle.keys())[0]
                 y = self.mayBeCircle.get(x)
-                print x
-                print y
+                #print x
+                #print y
                 p1[0] = x
                 p1[1] = y
                 ##delete key once processed
                 x = list(self.mayBeCircle.keys())[1]
                 y = self.mayBeCircle.get(x)
-                print x
-                print y
+                #print x
+                #print y
                 p2[0] = x
                 p2[1] = y
                 x = list(self.mayBeCircle.keys())[2]
                 y = self.mayBeCircle.get(x)
-                print x
-                print y
+                #print x
+                #print y
                 p3[0] = x
                 p3[1] = y
-                k = circle(p1,p2,p3)
+                k = self.define_circle(p1, p2, p3)
                 print k
+               # a.insert(i, x)
+                #k[1] is the found radius
+                #finding chord mirror points and trying to navigate to them
+                p4[0] = p2[0]+k[1]*1.414
+                p4[1] = p2[1]+k[1]
+
+
+
+                print p4
+                p5[0]=p2[0]
+                p5[1]=p2[1]++2*k[1]
+                print p5
+                p6[0] = p2[0] - k[1] * 1.414
+                p6[1] = p2[1] - k[1]
+                print p6
             raw_input("Enter")
 
        # if hazard_location
