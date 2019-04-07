@@ -29,7 +29,17 @@ class WaypointPlanner(base.BaseModule):
                     way_point = [ [2,2],
                                   [3,3]]
     """
+    def sample_behavior(self):
+        """
 
+        :return: a list of way_points
+        """
+        way_points = [[-49,-1],[49, -27],[49,-150], [80,-27], [80,-150]
+                      ]
+
+
+
+        return way_points
 
     def init(self, world, mem):
         """
@@ -41,6 +51,10 @@ class WaypointPlanner(base.BaseModule):
         self.previous_way_points = []
         self.hazardMemory={}
         self.mayBeCircle = {}
+        self.k =0
+        self.insertPostion = 0
+        self.lock = 0
+        self.way_points = self.sample_behavior()
 
     def get_remus_location(self):
         """
@@ -59,17 +73,6 @@ class WaypointPlanner(base.BaseModule):
         return self.mem.get(self.mem.HAZARD_LOCATION)
 
 
-    def sample_behavior(self):
-        """
-
-        :return: a list of way_points
-        """
-        way_points = [[-49,-1],[49, -27],[49,-150], [80,-27], [80,-150]
-                      ]
-
-
-
-        return way_points
 
     def define_circle(self, p1, p2, p3):
         """
@@ -101,6 +104,19 @@ class WaypointPlanner(base.BaseModule):
 
         self.mem.set(self.mem.WAY_POINTS, way_points)
         self.previous_way_points = way_points
+
+    def calculate_index(self, location):
+
+        x = location[0]
+        y = location[1]
+        distances = []
+        a = np.array((x,y))
+        for each_point in self.previous_way_points:
+            b = np.array((each_point[0], each_point[1]))
+            distances.append(np.linalg.norm(a-b))
+
+        return distances.index(min(distances))
+
    
     def run(self, cycle, verbose=2):
         """
@@ -111,18 +127,20 @@ class WaypointPlanner(base.BaseModule):
         hazard_location = self.get_mine_location()
 
         # a simple behaviour for understanding the output format feel free to rempve the below code
-        way_points = self.sample_behavior()
+
 
         """
         Your Code should start here
         """
-    #   if hazard_location != null:
+
+        #   if hazard_location != null:
         if hazard_location:
+            print self.previous_way_points
+            #self.insertPostion = way_points.index("bar")
             print "Arjun"
             print hazard_location
-            temp = str(hazard_location)
-            y = float(temp[6:11])
-            x = float(temp[17:22])
+            y = hazard_location["Y"]
+            x = hazard_location["X"]
             self.hazardMemory[x] = y;
             for x_loc in self.hazardMemory.keys():
                 if (x+5) < x_loc:
@@ -139,7 +157,7 @@ class WaypointPlanner(base.BaseModule):
           #  hazard_location
            # print zipped
             print self.mayBeCircle
-            if len(self.mayBeCircle)>3:
+            if len(self.mayBeCircle)>=3:
                 p1 = [0,0]
                 p2 = [0,0]
                 p3 = [0,0]
@@ -166,24 +184,45 @@ class WaypointPlanner(base.BaseModule):
                 p3[0] = x
                 p3[1] = y
                 k = self.define_circle(p1, p2, p3)
+               # if p3[0]+5 >
                 print k
                # a.insert(i, x)
                 #k[1] is the found radius
                 #finding chord mirror points and trying to navigate to them
-                p4[0] = p2[0]+k[1]*1.414
-                p4[1] = p2[1]+k[1]
+                p4[0] = p1[0]+k[1]*1.414
+                p4[1] = p1[1]+k[1]
 
 
 
                 print p4
-                p5[0]=p2[0]
-                p5[1]=p2[1]++2*k[1]
+                p5[0]=p1[0]+2*k[1]
+                p5[1]=p1[1]
                 print p5
-                p6[0] = p2[0] - k[1] * 1.414
-                p6[1] = p2[1] - k[1]
+                p6[0] = p1[0] + k[1]
+                p6[1] = p1[1] - k[1]*1.414
                 print p6
-            raw_input("Enter")
+                indexnew = self.calculate_index(p1)
+                #print indexnew
+                #print self.way_points
+                self.way_points = self.way_points[indexnew:]
+                #print self.way_points
+                self.way_points.insert(indexnew+1,p6)
+                #print self.way_points
+                self.way_points.insert(indexnew+1,p5)
+                #print self.way_points
+                self.way_points.insert(indexnew+1, p4)
+                #print self.way_points
+                #print self.way_points
+                #del self.hazardMemory[se]
+                self.mayBeCircle={}
+               # self.hazardMemory = {}
+                #del self.hazardMemory[p1[o]]
+                #del self.hazardMemory[p2[o]]
+                #del self.hazardMemory[p3[o]]
+                print indexnew
+            #raw_input("Enter")
 
-       # if hazard_location
 
-        self.set_way_points(way_points)
+
+
+        self.set_way_points(self.way_points)
